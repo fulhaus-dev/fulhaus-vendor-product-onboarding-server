@@ -16,10 +16,11 @@ dotenv.config({
 dotenv.config({ path: path.resolve(projectRoot, ".env"), override: false });
 
 const envSchema = z.object({
-	NODE_ENV: z.enum(["development", "production"]).default("development"),
-	PORT: z.coerce.number().int().positive().default(8080),
-	API_URL: z.string(),
-	API_V1_PREFIX: z.string().startsWith("/").default("/api/v1"),
+	PORT: z.optional(z.coerce.number().int().positive().default(8080)),
+	WEBHOOK_ENVIRONMENT: z.enum(["development", "production"]).default("development"),
+	WEBHOOK_API_URL: z.string(),
+	WEBHOOK_API_V1_PREFIX: z.string().startsWith("/").default("/api/v1"),
+	WEBHOOK_ID: z.string(),
 	LOG_LEVEL: z.enum(["error", "warn", "info", "http", "verbose", "debug", "silly"]).default("info"),
 	CLOUDFLARE_R2_ENDPOINT: z.string(),
 	CLOUDFLARE_R2_ACCESS_KEY_ID: z.string(),

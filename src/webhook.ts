@@ -3,15 +3,16 @@ import app from "@webhook/express-app.js";
 import logger from "@webhook/util/logger.js";
 import http from "node:http";
 
-const PORT = env?.PORT;
+const WEBHOOK_PORT = env.PORT;
+const WEBHOOK_API_URL = env.WEBHOOK_API_URL;
 
 const server = http.createServer(app);
 
 function startServer() {
-	server.listen(PORT, () => {
-		logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${PORT}`);
-		logger.info(`🔗 API URL: ${env.API_URL}`);
-		logger.info(`🔗 API HEALTH CHECK URL: ${env.API_URL}/health`);
+	server.listen(WEBHOOK_PORT, () => {
+		logger.info(`🚀 Server running in ${env.WEBHOOK_ENVIRONMENT} mode on port ${WEBHOOK_PORT}`);
+		logger.info(`🔗 API URL: ${WEBHOOK_API_URL}`);
+		logger.info(`🔗 API HEALTH CHECK URL: ${WEBHOOK_API_URL}/health`);
 	});
 
 	server.on("error", (error: NodeJS.ErrnoException) => {
@@ -23,11 +24,11 @@ function startServer() {
 
 		switch (error.code) {
 			case "EACCES":
-				logger.fatal(`Port ${PORT} requires elevated privileges.`);
+				logger.fatal(`Port ${WEBHOOK_PORT} requires elevated privileges.`);
 				process.exit(1);
 				break;
 			case "EADDRINUSE":
-				logger.fatal(`Port ${PORT} is already in use.`);
+				logger.fatal(`Port ${WEBHOOK_PORT} is already in use.`);
 				process.exit(1);
 				break;
 			default:
