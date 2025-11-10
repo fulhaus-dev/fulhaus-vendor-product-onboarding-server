@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..", "..");
 
 dotenv.config({
-	path: path.resolve(projectRoot, `.env.${process.env.NODE_ENV || "development"}`),
+	path: path.resolve(projectRoot, `.env.${process.env.WEBHOOK_ENVIRONMENT || "development"}`),
 });
 dotenv.config({ path: path.resolve(projectRoot, ".env"), override: false });
 

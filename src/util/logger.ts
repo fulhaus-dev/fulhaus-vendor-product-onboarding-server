@@ -7,7 +7,7 @@ const pinoOptions: LoggerOptions = {
 	name: "app-logger",
 };
 
-if (env.NODE_ENV === "development") {
+if (env.WEBHOOK_ENVIRONMENT === "development") {
 	pinoOptions.transport = {
 		target: "pino-pretty",
 		options: {

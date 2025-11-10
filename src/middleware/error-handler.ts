@@ -32,6 +32,6 @@ export const errorHandler = (err: Error, req: Request, res: Response, _: NextFun
 	res.status(statusCode).json({
 		message,
 		details: errorDetails,
-		stack: env.NODE_ENV === "development" ? err.stack : undefined,
+		stack: env.WEBHOOK_ENVIRONMENT === "development" ? err.stack : undefined,
 	});
 };
