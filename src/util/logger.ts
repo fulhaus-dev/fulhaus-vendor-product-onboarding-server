@@ -1,5 +1,6 @@
-import { env } from "@webhook/config/environment.js";
 import pino, { type LoggerOptions } from "pino";
+
+import { env } from "@webhook/config/environment.js";
 
 // Define pino options with type checking
 const pinoOptions: LoggerOptions = {

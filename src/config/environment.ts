@@ -45,4 +45,4 @@ if (zodError) {
 	process.exit(1);
 }
 
-export const env = parsedEnvData;
+export const env = parsedEnvData!;
