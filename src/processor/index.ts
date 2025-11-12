@@ -1,7 +1,12 @@
 import type { GenericId as Id } from "convex/values";
 import { v7 as uuidv7 } from "uuid";
 
-import type { BaseProductData, BaseProductDataMap, CreateProduct } from "@webhook/product/type.js";
+import type {
+	BaseProductData,
+	BaseProductDataMap,
+	CreateProduct,
+	ProductCategoryCount,
+} from "@webhook/product/type.js";
 
 import { env } from "@webhook/config/environment.js";
 import { logProductError } from "@webhook/error/index.js";
@@ -31,8 +36,18 @@ export async function processProductLine(args: {
 	headerLine: string;
 	delimiter: string;
 	vendorR2BucketFolderName: string;
+	productCategoryCount: ProductCategoryCount;
+	ownerId: string;
 }) {
-	const { baseProductDataMap, productLine, headerLine, delimiter, vendorR2BucketFolderName } = args;
+	const {
+		baseProductDataMap,
+		productLine,
+		headerLine,
+		delimiter,
+		vendorR2BucketFolderName,
+		productCategoryCount,
+		ownerId,
+	} = args;
 
 	if (Object.keys(baseProductDataMap).length < 1)
 		return await logProductError({
@@ -58,12 +73,13 @@ export async function processProductLine(args: {
 		headerLine,
 		delimiter,
 		baseProductData,
+		productCategoryCount,
 	});
 
-	if (otherProductDataResponse.errorData)
+	if (otherProductDataResponse?.errorData)
 		return await logProductError(otherProductDataResponse.errorData);
 
-	const productDataResponse = otherProductDataResponse.data;
+	const productDataResponse = otherProductDataResponse?.data;
 	if (!productDataResponse) return;
 
 	if (!productDataResponse.mainImageImageIndex) return;
@@ -126,6 +142,8 @@ export async function processProductLine(args: {
 		fhSku: uuidv7(),
 		vendorId: VENDOR_IDS[vendorR2BucketFolderName],
 		unitPerBox: productDataResponse.unitPerBox,
+		ownerId,
+		location: productDataResponse.location ?? undefined,
 	};
 
 	const productToAdd: CreateProduct = {
@@ -143,8 +161,9 @@ async function getOtherProductData(args: {
 	headerLine: string;
 	delimiter: string;
 	baseProductData: BaseProductData;
+	productCategoryCount: ProductCategoryCount;
 }) {
-	const { productLine, headerLine, delimiter, baseProductData } = args;
+	const { productLine, headerLine, delimiter, baseProductData, productCategoryCount } = args;
 
 	const imageUrls = extractProductImageUrls(productLine).slice(0, 5);
 	const productLineArray = productLine.split(delimiter);
@@ -176,6 +195,14 @@ async function getOtherProductData(args: {
 				],
 			},
 		};
+
+	if (!sanitizedData.category) return;
+
+	if (
+		(productCategoryCount[sanitizedData.category]?.[`count${sanitizedData.currencyCode}`] ?? 0) <=
+		env.MAX_PRODUCT_PER_CATEGORY
+	)
+		return;
 
 	const mainImageUrl = imageUrls[Number(sanitizedData.mainImageImageIndex)];
 

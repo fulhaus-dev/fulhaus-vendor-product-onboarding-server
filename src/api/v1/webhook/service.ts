@@ -11,9 +11,13 @@ import {
 	getProductDataR2FileStream,
 } from "@webhook/api/v1/webhook/util/r2.js";
 
-const allowedFileKeys = ["wayfair/Fulhaus_BL.txt.zip"];
+export async function vendorProductWebhookService(args: {
+	vendorProductDataR2FolderName: string;
+	fileNameToProcess: string;
+	ownerId: string;
+}) {
+	const { vendorProductDataR2FolderName, fileNameToProcess, ownerId } = args;
 
-export async function vendorProductWebhookService(vendorProductDataR2FolderName: string) {
 	const allProductFileKeys = await getAllFileKeysInVendorProductDataR2BucketFolder(
 		vendorProductDataR2FolderName
 	);
@@ -22,6 +26,8 @@ export async function vendorProductWebhookService(vendorProductDataR2FolderName:
 		getVendorProductDataFileKeysThatCanBeProcessed(allProductFileKeys);
 
 	for (const flatFileKey of flatFileKeys) {
+		if (flatFileKey !== fileNameToProcess) continue;
+
 		const { data: flatFileStream } = await getProductDataR2FileStream(flatFileKey);
 		if (!flatFileStream) continue;
 
@@ -29,10 +35,13 @@ export async function vendorProductWebhookService(vendorProductDataR2FolderName:
 			flatFileStream,
 			vendorProductDataR2FolderName,
 			fileName: flatFileKey,
+			ownerId,
 		});
 	}
 
 	for (const spreadsheetFileKey of spreadsheetFileKeys) {
+		if (spreadsheetFileKey !== fileNameToProcess) continue;
+
 		const { data: spreadsheetFileStream } = await getProductDataR2FileStream(spreadsheetFileKey);
 		if (!spreadsheetFileStream) continue;
 
@@ -44,7 +53,7 @@ export async function vendorProductWebhookService(vendorProductDataR2FolderName:
 	}
 
 	for (const zipFileKey of zipFileKeys) {
-		if (!allowedFileKeys.includes(zipFileKey)) continue;
+		if (zipFileKey !== fileNameToProcess) continue;
 
 		const { data: zipFileStream } = await getProductDataR2FileStream(zipFileKey);
 		if (!zipFileStream) continue;

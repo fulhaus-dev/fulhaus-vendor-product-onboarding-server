@@ -28,6 +28,7 @@ const envSchema = z.object({
 	CLOUDFLARE_R2_SECRET_ACCESS_KEY: z.string(),
 	CLOUDFLARE_R2_VENDOR_PRODUCT_DATA_BUCKET_NAME: z.string(),
 	FILE_STREAM_MAX_FILE_LINE_BATCH_SIZE: z.coerce.number().int().positive(),
+	MAX_PRODUCT_PER_CATEGORY: z.coerce.number().int().positive(),
 	CONVEX_DEPLOYMENT: z.string(),
 	CONVEX_URL: z.string(),
 	CONVEX_PRODUCT_ONBOARDING_API_KEY: z.string(),

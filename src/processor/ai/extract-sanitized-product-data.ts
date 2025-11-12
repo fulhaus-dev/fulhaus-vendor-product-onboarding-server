@@ -83,6 +83,10 @@ return ONLY valid JSON matching the schema.
     - Category: Assign the applicable category from the provided category list based on the detected main image and product info.
     Category list:
     ${productCategories.join("\n")}.
+
+**PRODUCT LOCATION**:
+    - Generate the warehouse address location for the product based on the product info if available.
+	- The location in the product info can be a country code, zip code, state code, city, address, etc. Generate a fitting address location based on any limited info in the product info that can be used to get the latitude and longitude of the product location later.
 `;
 
 export async function extractSanitizedProductData(args: {
@@ -113,13 +117,13 @@ export async function extractSanitizedProductData(args: {
 			.describe("The applicable styles for the product based on the detected main image"),
 
 		// 3. Dimension
-		width: z.optional(z.number()).nullable().describe("The width of the product if available"),
-		height: z.optional(z.number()).nullable().describe("The height of the product if available"),
-		depth: z.optional(z.number()).nullable().describe("The depth of the product if available"),
+		width: z.optional(z.number()).describe("The width of the product if available"),
+		height: z.optional(z.number()).describe("The height of the product if available"),
+		depth: z.optional(z.number()).describe("The depth of the product if available"),
 		dimensionUnit: z.enum(productDataDimensionUnits),
 
 		// 4. Weight
-		weight: z.optional(z.number()).nullable().describe("The weight of the product if available"),
+		weight: z.optional(z.number()).describe("The weight of the product if available"),
 		weightUnit: z.enum(productDataWeightUnits),
 
 		// 5. Currency Code
@@ -142,9 +146,15 @@ export async function extractSanitizedProductData(args: {
 			),
 		category: z
 			.optional(z.enum(productCategories))
-			.nullable()
 			.describe(
 				"The category that best matches the product from the provided category list if there is a match."
+			),
+
+		// 7. Product Location
+		location: z
+			.optional(z.string())
+			.describe(
+				"A generated address location for the product based on the product info if available."
 			),
 	});
 

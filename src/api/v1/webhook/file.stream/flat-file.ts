@@ -1,28 +1,56 @@
 import type { Readable } from "node:stream";
 
-import type { BaseProductDataMap } from "@webhook/product/type.js";
+import type {
+	BaseProductDataMap,
+	ProductCategoryCount,
+	ProductCategoryCountCurrency,
+} from "@webhook/product/type.js";
 
 import getProductFileConfig from "@webhook/api/v1/webhook/file.stream/util/get-product-file-config.js";
 import { env } from "@webhook/config/environment.js";
 import { logProductError } from "@webhook/error/index.js";
 import { processProductLine } from "@webhook/processor/index.js";
-import { createProductsService } from "@webhook/product/service.js";
+import {
+	createProductsService,
+	getAllProductCategoryStatisticService,
+} from "@webhook/product/service.js";
 import { chunkArray } from "@webhook/util/array.js";
 import logger from "@webhook/util/logger.js";
 
 const FILE_STREAM_MAX_FILE_LINE_BATCH_SIZE = env.FILE_STREAM_MAX_FILE_LINE_BATCH_SIZE;
+
+let hasFetchedCategoryCount = false;
+let categoryCount = {} as ProductCategoryCount;
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <Okay>
 export default async function processFlatFileProductDataStream(args: {
 	flatFileStream: Readable;
 	vendorProductDataR2FolderName: string;
 	fileName: string;
+	ownerId: string;
 }) {
-	const { flatFileStream, vendorProductDataR2FolderName, fileName } = args;
+	const { flatFileStream, vendorProductDataR2FolderName, fileName, ownerId } = args;
 
 	logger.info(
 		`✅ Started processing lines from ${fileName} for vendor ${vendorProductDataR2FolderName}`
 	);
+
+	if (!hasFetchedCategoryCount) {
+		const { data: categoryCountResponse } = await getAllProductCategoryStatisticService();
+
+		if (categoryCountResponse) {
+			categoryCount = categoryCountResponse.stats.reduce((acc, count) => {
+				acc[count.category] = {
+					countUSD: count.countUSD,
+					countCAD: count.countCAD,
+				} as ProductCategoryCountCurrency;
+
+				return acc;
+			}, {} as ProductCategoryCount);
+		}
+
+		hasFetchedCategoryCount = true;
+	}
 
 	let buffer = "";
 	let fileFieldMapLines: string[] = [];
@@ -81,6 +109,7 @@ export default async function processFlatFileProductDataStream(args: {
 				headerLine: fileHeaderLine!,
 				delimiter: fileDelimiter!,
 				vendorR2BucketFolderName: vendorProductDataR2FolderName,
+				ownerId,
 			});
 
 			flatFileStream.resume();
@@ -96,6 +125,7 @@ export default async function processFlatFileProductDataStream(args: {
 			headerLine: fileHeaderLine!,
 			delimiter: fileDelimiter!,
 			vendorR2BucketFolderName: vendorProductDataR2FolderName,
+			ownerId,
 		});
 	}
 
@@ -104,15 +134,23 @@ export default async function processFlatFileProductDataStream(args: {
 	);
 }
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <Okay>
 async function processFileLinesBatch(args: {
 	baseProductDataMap: BaseProductDataMap;
 	fileLinesBatch: string[];
 	headerLine: string;
 	delimiter: string;
 	vendorR2BucketFolderName: string;
+	ownerId: string;
 }) {
-	const { baseProductDataMap, fileLinesBatch, headerLine, delimiter, vendorR2BucketFolderName } =
-		args;
+	const {
+		baseProductDataMap,
+		fileLinesBatch,
+		headerLine,
+		delimiter,
+		vendorR2BucketFolderName,
+		ownerId,
+	} = args;
 
 	const fileLinesBatchChunks = chunkArray(fileLinesBatch, FILE_STREAM_MAX_FILE_LINE_BATCH_SIZE);
 
@@ -125,6 +163,8 @@ async function processFileLinesBatch(args: {
 					headerLine,
 					delimiter,
 					vendorR2BucketFolderName,
+					productCategoryCount: categoryCount,
+					ownerId,
 				})
 			)
 		);
@@ -134,7 +174,7 @@ async function processFileLinesBatch(args: {
 			.map((response) => response.data);
 
 		if (productsToCreate.length > 0) {
-			const { error } = await createProductsService(productsToCreate);
+			const { data, error } = await createProductsService(productsToCreate);
 			if (error)
 				logProductError({
 					message: error.message,
@@ -145,6 +185,22 @@ async function processFileLinesBatch(args: {
 						},
 					],
 				});
+
+			if (data) {
+				for (const product of productsToCreate) {
+					const category = product.productData.category;
+					const currencyCode = product.productData.hasCAD ? "CAD" : "USD";
+					const currentCategoryCount = categoryCount?.[product.productData.category];
+
+					if (!currentCategoryCount)
+						categoryCount[category] = {
+							[`count${currencyCode}`]: 1,
+						} as ProductCategoryCountCurrency;
+					else
+						categoryCount[category][`count${currencyCode}`] =
+							(currentCategoryCount?.[`count${currencyCode}`] ?? 0) + 1;
+				}
+			}
 		}
 	}
 }

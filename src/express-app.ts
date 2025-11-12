@@ -27,7 +27,7 @@ app.get("/health", (_, res) => {
 	);
 });
 
-app.use(`${env.WEBHOOK_API_V1_PREFIX}/v1/auth`, webhookRouter);
+app.use(`${env.WEBHOOK_API_V1_PREFIX}/webhook`, webhookRouter);
 
 // --- Error Handling Middlewares ---
 // Handle 404 Not Found for any routes not matched above

@@ -1,6 +1,5 @@
 import http from "node:http";
 
-import { vendorProductWebhookService } from "@webhook/api/v1/webhook/service.js";
 import { env } from "@webhook/config/environment.js";
 import app from "@webhook/express-app.js";
 import logger from "@webhook/util/logger.js";
@@ -134,8 +133,6 @@ process.on("uncaughtException", (error: Error /* origin: NodeJS.UncaughtExceptio
 
 try {
 	startServer();
-
-	vendorProductWebhookService("wayfair");
 } catch (error) {
 	logger.fatal(error, "Failed to start server during initial setup.");
 	process.exit(1);
