@@ -155,8 +155,6 @@ async function processFileLinesBatch(args: {
 	const fileLinesBatchChunks = chunkArray(fileLinesBatch, FILE_STREAM_MAX_FILE_LINE_BATCH_SIZE);
 
 	for (const fileLinesBatchChunk of fileLinesBatchChunks) {
-		logger.info(`Processing ${fileLinesBatchChunk.length} lines`);
-
 		const responses = await Promise.all(
 			fileLinesBatchChunk.map((fileLine) =>
 				processProductLine({
@@ -204,7 +202,5 @@ async function processFileLinesBatch(args: {
 				}
 			}
 		}
-
-		logger.info(`Done processing ${fileLinesBatchChunk.length} lines`);
 	}
 }
