@@ -13,11 +13,12 @@ import { logProductError } from "@webhook/error/index.js";
 import { extractSanitizedProductData } from "@webhook/processor/ai/extract-sanitized-product-data.js";
 import { generateProductImageEmbedding } from "@webhook/processor/ai/generate-product-image-embedding.js";
 import {
-	extractProductImageUrls,
 	getBaseProductData,
+	getProductCurrencyFields,
 	getStandardizedProductDimension,
 	getStandardizedProductWeight,
 } from "@webhook/processor/util.js";
+import { getProductBySkuService, updateProductByIdService } from "@webhook/product/service.js";
 
 const VENDOR_IDS = env.VENDORS.split(",").reduce(
 	(map, vendor) => {
@@ -85,37 +86,81 @@ export async function processProductLine(args: {
 	if (!productDataResponse.mainImageImageIndex) return;
 	if (!productDataResponse.category) return;
 
-	const retailPrice =
-		productDataResponse.msrp ?? productDataResponse.map ?? productDataResponse.tradePrice * 2;
+	// const retailPrice =
+	// 	productDataResponse.msrp ?? productDataResponse.map ?? productDataResponse.tradePrice * 2;
 
-	const price = {
-		currencyCode: productDataResponse.currencyCode,
-		retailPrice,
+	// const price = {
+	// 	currencyCode: productDataResponse.currencyCode,
+	// 	retailPrice,
+	// 	msrp: productDataResponse.msrp,
+	// 	map: productDataResponse.map,
+	// 	tradePrice: productDataResponse.tradePrice,
+	// };
+
+	// const hasCAD = price.currencyCode === "CAD";
+	// const hasUSD = price.currencyCode === "USD";
+	// const retailPriceCAD = price.currencyCode === "CAD" ? price.retailPrice : undefined;
+	// const retailPriceUSD = price.currencyCode === "USD" ? price.retailPrice : undefined;
+
+	// const stockQtyUSD = price.currencyCode === "USD" ? productDataResponse.stockQty : 0;
+	// const stockQtyCAD = price.currencyCode === "CAD" ? productDataResponse.stockQty : 0;
+	// const restockDateUSD = price.currencyCode === "USD" ? productDataResponse.restockDate : undefined;
+	// const restockDateCAD = price.currencyCode === "CAD" ? productDataResponse.restockDate : undefined;
+
+	const { price, ...otherProductCurrencyFields } = getProductCurrencyFields({
 		msrp: productDataResponse.msrp,
 		map: productDataResponse.map,
 		tradePrice: productDataResponse.tradePrice,
-	};
+		currencyCode: productDataResponse.currencyCode,
+		stockQty: productDataResponse.stockQty,
+		restockDate: productDataResponse.restockDate,
+	});
 
-	const hasCAD = price.currencyCode === "CAD";
-	const hasUSD = price.currencyCode === "USD";
-	const retailPriceCAD = price.currencyCode === "CAD" ? price.retailPrice : undefined;
-	const retailPriceUSD = price.currencyCode === "USD" ? price.retailPrice : undefined;
+	const { data: existingProduct } = await getProductBySkuService(baseProductData.sku);
+	if (existingProduct?.data) {
+		const currencyAlreadyExists = Boolean(
+			existingProduct.data.prices.find((p) => p.currencyCode === price.currencyCode)
+		);
 
-	const stockQtyUSD = price.currencyCode === "USD" ? productDataResponse.stockQty : 0;
-	const stockQtyCAD = price.currencyCode === "CAD" ? productDataResponse.stockQty : 0;
-	const restockDateUSD = price.currencyCode === "USD" ? productDataResponse.restockDate : undefined;
-	const restockDateCAD = price.currencyCode === "CAD" ? productDataResponse.restockDate : undefined;
+		const updates = {
+			prices: currencyAlreadyExists ? undefined : [...existingProduct.data.prices, price],
+			...otherProductCurrencyFields,
+		};
+
+		await updateProductByIdService({
+			productId: existingProduct.data._id,
+			updates: Object.fromEntries(
+				Object.entries(updates).filter(([key, value]) => value !== undefined)
+			),
+		});
+
+		return {
+			productUpdateCategoryData: {
+				currencyCode: price.currencyCode,
+				category: productDataResponse.category,
+			},
+		};
+	}
+
+	const mainImageUrl =
+		productDataResponse.imageUrls[Number(productDataResponse.mainImageImageIndex)];
+
+	const { data: productImageEmbedding, error: generateProductImageEmbeddingError } =
+		await generateProductImageEmbedding(mainImageUrl);
+	if (generateProductImageEmbeddingError)
+		return await logProductError({
+			message: generateProductImageEmbeddingError.message,
+			details: [
+				{
+					function: "extractSanitizedProductData",
+					args,
+				},
+			],
+		});
 
 	const productData = {
+		...otherProductCurrencyFields,
 		prices: [price],
-		hasCAD,
-		hasUSD,
-		retailPriceCAD,
-		retailPriceUSD,
-		stockQtyUSD,
-		stockQtyCAD,
-		restockDateUSD,
-		restockDateCAD,
 		brand: productDataResponse.brand,
 		name: productDataResponse.name,
 		description: productDataResponse.description,
@@ -146,12 +191,15 @@ export async function processProductLine(args: {
 	};
 
 	const productToAdd: CreateProduct = {
-		imageEmbedding: productDataResponse.productImageEmbedding,
+		imageEmbedding: productImageEmbedding,
 		productData,
 	};
 
 	return {
-		data: productToAdd,
+		data: {
+			productToAdd,
+			currencyCode: price.currencyCode,
+		},
 	};
 }
 
@@ -164,7 +212,7 @@ async function getOtherProductData(args: {
 }) {
 	const { productLine, headerLine, delimiter, baseProductData, productCategoryCount } = args;
 
-	const imageUrls = extractProductImageUrls(productLine).slice(0, 5);
+	const imageUrls = baseProductData.imageUrls.slice(0, 5);
 	const productLineArray = productLine.split(delimiter);
 	const headerLineArray = headerLine.split(delimiter);
 
@@ -203,23 +251,6 @@ async function getOtherProductData(args: {
 	)
 		return;
 
-	const mainImageUrl = imageUrls[Number(sanitizedData.mainImageImageIndex)];
-
-	const { data: productImageEmbedding, error: generateProductImageEmbeddingError } =
-		await generateProductImageEmbedding(mainImageUrl);
-	if (generateProductImageEmbeddingError)
-		return {
-			errorData: {
-				message: generateProductImageEmbeddingError.message,
-				details: [
-					{
-						function: "extractSanitizedProductData",
-						args,
-					},
-				],
-			},
-		};
-
 	const standardizedDimension = getStandardizedProductDimension({
 		width: sanitizedData.width ?? undefined,
 		height: sanitizedData.height ?? undefined,
@@ -238,8 +269,6 @@ async function getOtherProductData(args: {
 			...sanitizedData,
 			...standardizedDimension,
 			...standardizedProductWeight,
-
-			productImageEmbedding,
 		},
 	};
 }
