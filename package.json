@@ -1,7 +1,7 @@
 {
-  "name": "fulhaus-vendor-product-webhook",
+  "name": "fulhaus-vendor-product-onboarding-server",
   "version": "1.0.0",
-  "description": "Fülhaus Vendor Product Webhook",
+  "description": "Fülhaus Vendor Product Onboarding Server",
   "type": "module",
   "main": "dist/webhook.js",
   "engines": {
