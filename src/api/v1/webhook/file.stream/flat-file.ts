@@ -1,5 +1,3 @@
-import type { Readable } from "node:stream";
-
 import type {
 	BaseProductDataMap,
 	ProductCategory,
@@ -26,7 +24,7 @@ let categoryCount = {} as ProductCategoryCount;
 
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: <Okay>
 export default async function processFlatFileProductDataStream(args: {
-	flatFileStream: Readable;
+	flatFileStream: NodeJS.ReadableStream;
 	vendorProductDataR2FolderName: string;
 	fileName: string;
 	ownerId: string;

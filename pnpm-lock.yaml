@@ -14,9 +14,6 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.927.0
         version: 3.929.0
-      adm-zip:
-        specifier: ^0.5.16
-        version: 0.5.16
       ai:
         specifier: ^5.0.89
         version: 5.0.92(zod@4.1.12)
@@ -41,6 +38,9 @@ importers:
       morgan:
         specifier: ^1.10.1
         version: 1.10.1
+      node-stream-zip:
+        specifier: ^1.15.0
+        version: 1.15.0
       pino:
         specifier: ^10.1.0
         version: 10.1.0
@@ -940,10 +940,6 @@ packages:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
     engines: {node: '>= 0.6'}
 
-  adm-zip@0.5.16:
-    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
-    engines: {node: '>=12.0'}
-
   ai@5.0.92:
     resolution: {integrity: sha512-EnPe3QXiD06Tg7iAt/oU3JSwedI1nuhEBnTjyfn1qTXaqmJ6qI4YG8wn/eBHRVXnmljDFDNYvGBC5pALYV1rAA==}
     engines: {node: '>=18'}
@@ -1597,6 +1593,10 @@ packages:
   negotiator@1.0.0:
     resolution: {integrity: sha512-8Ofs/AUQh8MaEcrlq5xOX0CQ9ypTF5dl78mjlMNfOK08fzpgTHQRQPBxcPlEtIw0yRpws+Zo/3r+5WRby7u3Gg==}
     engines: {node: '>= 0.6'}
+
+  node-stream-zip@1.15.0:
+    resolution: {integrity: sha512-LN4fydt9TqhZhThkZIVQnF9cwjU3qmUH9h78Mx/K7d3VvfRqqwthLwJEUOEL0QPZ0XQmNN7be5Ggit5+4dq3Bw==}
+    engines: {node: '>=0.12.0'}
 
   normalize-package-data@2.5.0:
     resolution: {integrity: sha512-/5CMN3T0R4XTj4DcGaexo+roZSdSFW/0AOOTROrjxzCG1wrWXEsGbRKevjlIL+ZDE4sZlJr5ED4YW0yqmkK+eA==}
@@ -3142,8 +3142,6 @@ snapshots:
       mime-types: 3.0.1
       negotiator: 1.0.0
 
-  adm-zip@0.5.16: {}
-
   ai@5.0.92(zod@4.1.12):
     dependencies:
       '@ai-sdk/gateway': 2.0.8(zod@4.1.12)
@@ -3788,6 +3786,8 @@ snapshots:
   mylas@2.1.14: {}
 
   negotiator@1.0.0: {}
+
+  node-stream-zip@1.15.0: {}
 
   normalize-package-data@2.5.0:
     dependencies:
