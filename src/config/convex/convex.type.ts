@@ -804,6 +804,34 @@ export type PublicApiType = {
 					},
 					{ productIds: Array<Id<"products">> }
 				>;
+				updatePoProductById: FunctionReference<
+					"mutation",
+					"public",
+					{
+						data: {
+							productId: Id<"products">;
+							updates: {
+								hasCAD?: boolean;
+								hasUSD?: boolean;
+								prices?: Array<{
+									currencyCode: "USD" | "CAD";
+									map?: number;
+									msrp?: number;
+									retailPrice: number;
+									tradePrice: number;
+								}>;
+								restockDate?: number;
+								retailPriceCAD?: number;
+								retailPriceUSD?: number;
+								status?: "Active" | "Inactive" | "Discontinued";
+								stockDate?: number;
+								stockQty?: number;
+							};
+						};
+						poApiKey: string;
+					},
+					null
+				>;
 				updatePoProductsById: FunctionReference<
 					"mutation",
 					"public",
@@ -834,6 +862,196 @@ export type PublicApiType = {
 				>;
 			};
 			query: {
+				getPoProductBySku: FunctionReference<
+					"query",
+					"public",
+					{ poApiKey: string; sku: string },
+					{
+						data: {
+							_creationTime: number;
+							_id: Id<"products">;
+							brand?: string;
+							category:
+								| "Arm Chair"
+								| "Artwork"
+								| "Baking Dish"
+								| "Bar Cart"
+								| "Bar Stool"
+								| "Bar Table"
+								| "Bath Linens"
+								| "Bathroom Accessory"
+								| "Ornament"
+								| "Bathtub"
+								| "Bed"
+								| "Bedding"
+								| "Bedroom Vanity"
+								| "Bench"
+								| "Blind"
+								| "Bookcase"
+								| "Cabinet"
+								| "Carpet"
+								| "Ceiling Lamp"
+								| "Ceiling Mirror"
+								| "Chaise Lounge"
+								| "Chest"
+								| "Coat Rack"
+								| "Coffee Table"
+								| "Console Table"
+								| "Cookware"
+								| "Counter"
+								| "Counter Stool"
+								| "Crib"
+								| "Crib Mattress"
+								| "Crib Bed"
+								| "Crib Bedding"
+								| "Curtain"
+								| "Desk"
+								| "Desk Chair"
+								| "Dining Chair"
+								| "Dining Table"
+								| "Dinnerware"
+								| "Dresser"
+								| "Entry Hook"
+								| "Floor Lamp"
+								| "Kettle"
+								| "King Mattress"
+								| "Kitchen Accessory"
+								| "LED Light"
+								| "Loveseat"
+								| "Nightstand"
+								| "Ottoman"
+								| "Pendant Light"
+								| "Pillow"
+								| "Plant"
+								| "Planter"
+								| "Artificial Plant"
+								| "Queen Mattress"
+								| "Rack"
+								| "Rug"
+								| "Sconce"
+								| "Sculpture"
+								| "Sectional"
+								| "Shelf"
+								| "Shelving Unit"
+								| "Shower Curtain"
+								| "Side Table"
+								| "Sideboard"
+								| "Sofa"
+								| "Sofa Bed"
+								| "Standing Mirror"
+								| "Stands"
+								| "Storage Cabinet"
+								| "Table Lamp"
+								| "Tablecloth"
+								| "Throw Blanket"
+								| "Throw Pillow"
+								| "TV Media Console"
+								| "Twin Mattress"
+								| "Vanity"
+								| "Vanity Light"
+								| "Wall Mirror"
+								| "Wardrobe"
+								| "Waste basket"
+								| "Outdoor Arm Chair"
+								| "Outdoor Rug"
+								| "Outdoor Dining Chair"
+								| "Outdoor Chair"
+								| "Outdoor Coffee Table"
+								| "Outdoor Dining Table"
+								| "Outdoor Fire Pit"
+								| "Outdoor Lounger"
+								| "Outdoor Side Table"
+								| "Outdoor Sofa"
+								| "Outdoor Throw Pillow"
+								| "Outdoor Umbrella"
+								| "Outdoor Light"
+								| "Outdoor Lantern"
+								| "Outdoor Table"
+								| "Outdoor Table Lamp"
+								| "Outdoor LED Light"
+								| "Outdoor Ceiling Lamp";
+							colorNames: Array<string>;
+							depth?: number;
+							description: string;
+							dimension?: string;
+							dimensionUnit: "in";
+							embeddingId: Id<"productEmbeddings">;
+							fhSku: string;
+							fullTextSearch: string;
+							gtin?: string;
+							hasCAD?: boolean;
+							hasUSD?: boolean;
+							height?: number;
+							hexColors: Array<string>;
+							imageUrls: Array<string>;
+							itemId?: string;
+							location?: string;
+							mainImageNoBgUrl?: string;
+							mainImageUrl: string;
+							materials: Array<string>;
+							mpn?: string;
+							name: string;
+							ownerId: string;
+							pdpLink?: string;
+							prices: Array<{
+								currencyCode: "USD" | "CAD";
+								map?: number;
+								msrp?: number;
+								retailPrice: number;
+								tradePrice: number;
+							}>;
+							restockDateCAD?: number;
+							restockDateUSD?: number;
+							retailPriceCAD?: number;
+							retailPriceUSD?: number;
+							sku: string;
+							status: "Active" | "Inactive" | "Discontinued";
+							stockDate: number;
+							stockQtyCAD: number;
+							stockQtyUSD: number;
+							styles: Array<
+								| "Art Deco"
+								| "Biophilic"
+								| "Bohemian"
+								| "Brutalism"
+								| "Coastal"
+								| "Colonial"
+								| "Contemporary"
+								| "Craftsman"
+								| "Eclectic"
+								| "French Country"
+								| "Hollywood Glamour"
+								| "Industrial"
+								| "Japandi"
+								| "Luxury"
+								| "Maximalist"
+								| "Mediterranean"
+								| "Mid-Century Modern"
+								| "Minimalist"
+								| "Modern"
+								| "Modern Farmhouse"
+								| "Neoclassical"
+								| "Neutral"
+								| "Rustic"
+								| "Scandinavian"
+								| "Shabby Chic"
+								| "Southwestern"
+								| "Traditional"
+								| "Transitional"
+								| "Tudor"
+								| "Victorian"
+								| "Vintage"
+							>;
+							unitPerBox: number;
+							updatedAt: number;
+							vDimension?: string;
+							vendorId: Id<"productVendors">;
+							weight?: number;
+							weightUnit: "lb";
+							width?: number;
+						} | null;
+					}
+				>;
 				getPoProductsBySkus: FunctionReference<
 					"query",
 					"public",

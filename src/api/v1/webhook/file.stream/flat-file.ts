@@ -2,8 +2,10 @@ import type { Readable } from "node:stream";
 
 import type {
 	BaseProductDataMap,
+	ProductCategory,
 	ProductCategoryCount,
 	ProductCategoryCountCurrency,
+	ProductCurrencyCode,
 } from "@webhook/product/type.js";
 
 import getProductFileConfig from "@webhook/api/v1/webhook/file.stream/util/get-product-file-config.js";
@@ -169,11 +171,31 @@ async function processFileLinesBatch(args: {
 			)
 		);
 
-		const productsToCreate = responses
-			.filter((response) => response !== undefined)
+		const productsUpdateCategoryData = responses
+			.filter((response) => response?.productUpdateCategoryData !== undefined)
+			.map((response) => response.productUpdateCategoryData);
+
+		if (productsUpdateCategoryData.length > 0) {
+			for (const productUpdateCategoryData of productsUpdateCategoryData) {
+				const category = productUpdateCategoryData.category;
+				const currencyCode = productUpdateCategoryData.currencyCode;
+
+				updateCategoryCount({
+					category,
+					currencyCode,
+				});
+			}
+
+			return;
+		}
+
+		const productsData = responses
+			.filter((response) => response?.data !== undefined)
 			.map((response) => response.data);
 
-		if (productsToCreate.length > 0) {
+		if (productsData.length > 0) {
+			const productsToCreate = productsData.map((productData) => productData.productToAdd);
+
 			const { data, error } = await createProductsService(productsToCreate);
 			if (error)
 				logProductError({
@@ -187,20 +209,32 @@ async function processFileLinesBatch(args: {
 				});
 
 			if (data) {
-				for (const product of productsToCreate) {
-					const category = product.productData.category;
-					const currencyCode = product.productData.hasCAD ? "CAD" : "USD";
-					const currentCategoryCount = categoryCount?.[product.productData.category];
+				for (const productData of productsData) {
+					const category = productData.productToAdd.productData.category;
+					const currencyCode = productData.currencyCode;
 
-					if (!currentCategoryCount)
-						categoryCount[category] = {
-							[`count${currencyCode}`]: 1,
-						} as ProductCategoryCountCurrency;
-					else
-						categoryCount[category][`count${currencyCode}`] =
-							(currentCategoryCount?.[`count${currencyCode}`] ?? 0) + 1;
+					updateCategoryCount({
+						category,
+						currencyCode,
+					});
 				}
 			}
 		}
 	}
+}
+
+function updateCategoryCount(args: {
+	category: ProductCategory;
+	currencyCode: ProductCurrencyCode;
+}) {
+	const { category, currencyCode } = args;
+	const currentCategoryCount = categoryCount?.[category];
+
+	if (!currentCategoryCount)
+		categoryCount[category] = {
+			[`count${currencyCode}`]: 1,
+		} as ProductCategoryCountCurrency;
+	else
+		categoryCount[category][`count${currencyCode}`] =
+			(currentCategoryCount?.[`count${currencyCode}`] ?? 0) + 1;
 }
