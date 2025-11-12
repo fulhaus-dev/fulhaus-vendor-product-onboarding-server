@@ -1,18 +1,20 @@
+import http from "node:http";
+
+import { vendorProductWebhookService } from "@webhook/api/v1/webhook/service.js";
 import { env } from "@webhook/config/environment.js";
 import app from "@webhook/express-app.js";
 import logger from "@webhook/util/logger.js";
-import http from "node:http";
 
 const WEBHOOK_PORT = env.PORT;
-const WEBHOOK_API_URL = env.WEBHOOK_API_URL;
+const WEBHOOK_BASE_URL = env.WEBHOOK_BASE_URL;
 
 const server = http.createServer(app);
 
 function startServer() {
 	server.listen(WEBHOOK_PORT, () => {
 		logger.info(`🚀 Server running in ${env.WEBHOOK_ENVIRONMENT} mode on port ${WEBHOOK_PORT}`);
-		logger.info(`🔗 API URL: ${WEBHOOK_API_URL}`);
-		logger.info(`🔗 API HEALTH CHECK URL: ${WEBHOOK_API_URL}/health`);
+		logger.info(`🔗 WEBHOOK BASE URL: ${WEBHOOK_BASE_URL}`);
+		logger.info(`🔗 WEBHOOK HEALTH CHECK URL: ${WEBHOOK_BASE_URL}/health`);
 	});
 
 	server.on("error", (error: NodeJS.ErrnoException) => {
@@ -132,6 +134,8 @@ process.on("uncaughtException", (error: Error /* origin: NodeJS.UncaughtExceptio
 
 try {
 	startServer();
+
+	vendorProductWebhookService("wayfair");
 } catch (error) {
 	logger.fatal(error, "Failed to start server during initial setup.");
 	process.exit(1);

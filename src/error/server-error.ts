@@ -1,5 +1,6 @@
-import { ErrorDetails } from "@webhook/type.js";
 import { StatusCodes } from "http-status-codes";
+
+import type { ErrorDetails } from "@webhook/type.js";
 
 export class ServerError extends Error {
 	public readonly statusCode: StatusCodes;

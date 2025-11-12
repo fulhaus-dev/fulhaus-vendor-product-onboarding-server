@@ -1,4 +1,5 @@
 import express from "express";
+
 import morgan from "morgan";
 
 import webhookRouter from "@webhook/api/v1/webhook/route.js";
@@ -16,11 +17,11 @@ app.use(express.json());
 
 // --- API Routes ---
 app.get("/", (_, res) => {
-	res.send("Ching!! This is Fülhaus Vendor Product Onboarding Webhook.");
+	res.send("Ching!! This is Fülhaus Vendor Product Webhook.");
 });
 app.get("/health", (_, res) => {
 	res.send(
-		`${new Date().toISOString()}: Woozaa!! Fülhaus Vendor Product Onboarding Webhook is been up and running. Has been up for ${Math.floor(
+		`${new Date().toISOString()}: Woozaa!! Fülhaus Vendor Product Webhook is been up and running. Has been up for ${Math.floor(
 			process.uptime()
 		)} seconds`
 	);

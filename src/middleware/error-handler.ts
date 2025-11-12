@@ -1,11 +1,13 @@
-import { env } from "@webhook/config/environment.js";
-import { ServerError } from "@webhook/error/server-error.js";
-import { ErrorDetails } from "@webhook/type.js";
-import logger from "@webhook/util/logger.js";
 import type { NextFunction, Request, Response } from "express";
 
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
 import z, { ZodError } from "zod";
+
+import type { ErrorDetails } from "@webhook/type.js";
+
+import { env } from "@webhook/config/environment.js";
+import { ServerError } from "@webhook/error/server-error.js";
+import logger from "@webhook/util/logger.js";
 
 export const errorHandler = (err: Error, req: Request, res: Response, _: NextFunction): void => {
 	logger.error({ err, reqPath: req.path, reqMethod: req.method }, "Error caught by error handler");

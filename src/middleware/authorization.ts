@@ -1,7 +1,7 @@
-import { env } from "@webhook/config/environment.js";
-import { ServerError } from "@webhook/error/server-error.js";
 import type { NextFunction, Request, Response } from "express";
 
+import { env } from "@webhook/config/environment.js";
+import { ServerError } from "@webhook/error/server-error.js";
 
 export function authorization(req: Request, _: Response, next: NextFunction) {
 	const webhookId = req.params.webhookId;

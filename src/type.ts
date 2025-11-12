@@ -1,1 +1,1 @@
-export type ErrorDetails = Record<string, unknown>[] | string;
+export type ErrorDetails = Record<string, unknown>[];
