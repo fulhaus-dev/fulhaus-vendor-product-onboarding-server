@@ -14,6 +14,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.927.0
         version: 3.929.0
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.16
       ai:
         specifier: ^5.0.89
         version: 5.0.92(zod@4.1.12)
@@ -51,6 +54,9 @@ importers:
       '@biomejs/biome':
         specifier: ^2.3.4
         version: 2.3.5
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.7
       '@types/express':
         specifier: ^5.0.5
         version: 5.0.5
@@ -878,6 +884,9 @@ packages:
   '@standard-schema/spec@1.0.0':
     resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
 
+  '@types/adm-zip@0.5.7':
+    resolution: {integrity: sha512-DNEs/QvmyRLurdQPChqq0Md4zGvPwHerAJYWk9l2jCbD1VPpnzRJorOdiq4zsw09NFbYnhfsoEhWtxIzXpn2yw==}
+
   '@types/body-parser@1.19.6':
     resolution: {integrity: sha512-HLFeCYgz89uk22N5Qg3dvGvsv46B8GLvKKo1zKG4NybA8U2DiEO3w9lqGg29t/tfLRJpJ6iQxnVw4OnB7MoM9g==}
 
@@ -930,6 +939,10 @@ packages:
   accepts@2.0.0:
     resolution: {integrity: sha512-5cvg6CtKwfgdmVqY1WIiXKc3Q1bkRqGLi+2W/6ao+6Y7gu/RCwRuAhGEzh5B4KlszSuTLgZYuqFqo5bImjNKng==}
     engines: {node: '>= 0.6'}
+
+  adm-zip@0.5.16:
+    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
+    engines: {node: '>=12.0'}
 
   ai@5.0.92:
     resolution: {integrity: sha512-EnPe3QXiD06Tg7iAt/oU3JSwedI1nuhEBnTjyfn1qTXaqmJ6qI4YG8wn/eBHRVXnmljDFDNYvGBC5pALYV1rAA==}
@@ -3061,6 +3074,10 @@ snapshots:
 
   '@standard-schema/spec@1.0.0': {}
 
+  '@types/adm-zip@0.5.7':
+    dependencies:
+      '@types/node': 24.10.1
+
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
@@ -3124,6 +3141,8 @@ snapshots:
     dependencies:
       mime-types: 3.0.1
       negotiator: 1.0.0
+
+  adm-zip@0.5.16: {}
 
   ai@5.0.92(zod@4.1.12):
     dependencies:
