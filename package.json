@@ -37,6 +37,7 @@
   "dependencies": {
     "@ai-sdk/google": "^2.0.30",
     "@aws-sdk/client-s3": "^3.927.0",
+    "adm-zip": "^0.5.16",
     "ai": "^5.0.89",
     "axios": "^1.13.2",
     "convex": "^1.28.2",
@@ -51,6 +52,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.4",
+    "@types/adm-zip": "^0.5.7",
     "@types/express": "^5.0.5",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.10.0",
