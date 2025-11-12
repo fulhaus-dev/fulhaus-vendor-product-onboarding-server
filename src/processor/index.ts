@@ -84,7 +84,6 @@ export async function processProductLine(args: {
 
 	if (!productDataResponse.mainImageImageIndex) return;
 	if (!productDataResponse.category) return;
-	if (!productDataResponse.dimension) return;
 
 	const retailPrice =
 		productDataResponse.msrp ?? productDataResponse.map ?? productDataResponse.tradePrice * 2;
@@ -124,7 +123,6 @@ export async function processProductLine(args: {
 		category: productDataResponse.category,
 		imageUrls: productDataResponse.imageUrls,
 		mainImageUrl: productDataResponse.imageUrls[Number(productDataResponse.mainImageImageIndex)],
-		vendorR2BucketFolderName,
 		colorNames: productDataResponse.colorNames,
 		materials: productDataResponse.materials,
 		styles: productDataResponse.styles,
@@ -144,6 +142,7 @@ export async function processProductLine(args: {
 		unitPerBox: productDataResponse.unitPerBox,
 		ownerId,
 		location: productDataResponse.location ?? undefined,
+		vDimension: productDataResponse.dimensionExtract ?? undefined,
 	};
 
 	const productToAdd: CreateProduct = {
@@ -199,7 +198,7 @@ async function getOtherProductData(args: {
 	if (!sanitizedData.category) return;
 
 	if (
-		(productCategoryCount[sanitizedData.category]?.[`count${sanitizedData.currencyCode}`] ?? 0) <=
+		(productCategoryCount[sanitizedData.category]?.[`count${sanitizedData.currencyCode}`] ?? 0) >
 		env.MAX_PRODUCT_PER_CATEGORY
 	)
 		return;
@@ -225,12 +224,12 @@ async function getOtherProductData(args: {
 		width: sanitizedData.width ?? undefined,
 		height: sanitizedData.height ?? undefined,
 		depth: sanitizedData.depth ?? undefined,
-		dimensionUnit: sanitizedData.dimensionUnit,
+		dimensionUnit: sanitizedData.dimensionUnit ?? "in",
 	});
 
 	const standardizedProductWeight = getStandardizedProductWeight({
 		weight: sanitizedData.weight ?? undefined,
-		weightUnit: sanitizedData.weightUnit,
+		weightUnit: sanitizedData.weightUnit ?? "lb",
 	});
 
 	return {

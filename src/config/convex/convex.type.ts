@@ -727,7 +727,7 @@ export type PublicApiType = {
 								colorNames: Array<string>;
 								depth?: number;
 								description: string;
-								dimension: string;
+								dimension?: string;
 								dimensionUnit: "in";
 								fhSku: string;
 								gtin?: string;
@@ -793,6 +793,7 @@ export type PublicApiType = {
 									| "Vintage"
 								>;
 								unitPerBox: number;
+								vDimension?: string;
 								vendorId: Id<"productVendors">;
 								weight?: number;
 								weightUnit: "lb";
@@ -944,7 +945,7 @@ export type PublicApiType = {
 							colorNames: Array<string>;
 							depth?: number;
 							description: string;
-							dimension: string;
+							dimension?: string;
 							dimensionUnit: "in";
 							embeddingId: Id<"productEmbeddings">;
 							fhSku: string;
@@ -1015,6 +1016,7 @@ export type PublicApiType = {
 							>;
 							unitPerBox: number;
 							updatedAt: number;
+							vDimension?: string;
 							vendorId: Id<"productVendors">;
 							weight?: number;
 							weightUnit: "lb";

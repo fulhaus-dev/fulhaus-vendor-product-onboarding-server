@@ -59,17 +59,38 @@ export function getBaseProductData(args: {
 	return baseProductData;
 }
 
-export function extractProductImageUrls(productLine: string) {
+export function extractProductImageUrls(productLine: string): string[] {
+	// Match any http(s):// sequence not interrupted by whitespace or comma
 	const urlPattern = /https?:\/\/[^\s,]+/g;
-	const imagePattern = /\.(jpg|jpeg|png|gif|svg|webp|bmp|tiff|ico)($|\?|#)/i;
-	const cdnPattern = /(images?|img|cdn|static|media|assets|photos|gallery|resize|thumb)/i;
-
 	const matches = productLine.match(urlPattern) || [];
-	const urls = matches
-		.filter((url) => imagePattern.test(url) || cdnPattern.test(url))
-		.map((url) => url.trim());
 
-	return [...new Set(urls)];
+	// 1. Must end with image extension, followed by ?, #, or end of string
+	const imageExtPattern = /\.(jpe?g|png|gif|svg|webp|bmp|tiff|ico|avif)(\?|#|$)/i;
+
+	// 2. Must contain a CDN/image-related path segment (e.g. /im/, /resize/, /cdn/, etc.)
+	const cdnPathPattern =
+		/(^|\/)(images?|img|cdn|static|media|assets|photos|gallery|resize|thumb|crop|compress)(\/|$)/i;
+
+	const imageUrls = matches
+		.map((url) => url.trim())
+		.filter((url) => {
+			// Primary: ends with .jpg?xyz or .png#abc or .webp
+			if (imageExtPattern.test(url)) {
+				return true;
+			}
+
+			// Secondary: no extension, but has CDN path AND contains known image-like pattern
+			// (Rare, but safe fallback)
+			return cdnPathPattern.test(url) && /\/[^/]+\.(jpe?g|png|gif)/i.test(url);
+		})
+		.map((url) => {
+			// Clean trailing commas, brackets, quotes
+			return url.replace(/[,\]'"\]]+$/, "");
+		})
+		// Normalize: remove fragment if not needed, but keep query params
+		.map((url) => url.split("#")[0]); // optional: drop #hash
+
+	return [...new Set(imageUrls)];
 }
 
 export function getStandardizedProductDimension(dimensionInfo?: ProductDimensionInfo) {

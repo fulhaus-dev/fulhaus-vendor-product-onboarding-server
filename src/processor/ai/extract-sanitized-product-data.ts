@@ -12,8 +12,7 @@ import {
 import { asyncTryCatch } from "@webhook/util/try-catch.js";
 
 const SYSTEM_PROMPT = `
-You are a furniture product data extractor. Analyze the product info and product images provided by the user and
-return ONLY valid JSON matching the schema.
+You are a very thorough furniture product data expert that can extract or generate a standard product data from the product info and product images provided by the user without any errors.
 
 **DETECT PRODUCT MAIN IMAGE**:
     Things to check, is it the only image? does it have a clear solid background? it does not contain any other items or elements apart from the image? If all of this is true, then it is the main image. If not check the next image and repeat the process until you find the main image. If you cant find a main image that fits this criteria then return null for the mainImageImageIndex.
@@ -50,43 +49,53 @@ return ONLY valid JSON matching the schema.
     - Artwork in space or lifestyle context
     - Stone walls, Fireplace and Fire pit
 
-**GENERATE PRODUCT STYLES BASED ON THE DETECTED MAIN IMAGE**:
-    - Color Names: Generate an array of all the color names based on the detected main image.
+**GENERATE COLORS**:
+	- Color Names: Generate an array of all the color names based on the detected main image.
     - Color Hexes: Generate an array of all the color hexes based on the detected main image.
-    - Material: Generate an array of all materials the product is made of based on the detected main image and information in the product info.
-    - Styles: Assign the applicable styles from the provided style list based on the detected main image.
-    *Style list*:
-    ${productStyles.join("\n")}.
 
-**DETECT AND ASSIGN STANDARDIZED DIMENSION AND METRIC UNIT**:
-    - Width: The product width value in the product info.
-    - Height: The product height value in the product info.
-    - Depth: The product depth value in the product info.
-    - Dimension Unit: Assign the equivalent dimension unit from the product info from the provided dimension unit list.
-    *Dimension unit list*:
-    ${productDataDimensionUnits.join("\n")}.
+**GENERATE MATERIALS**:
+	- Materials: Generate an array of all materials the product is made of based on the detected main image and information in the product info.
 
-**DETECT AND ASSIGN STANDARDIZED WEIGHT AND METRIC UNIT**:
+**ASSIGN PRODUCT STYLES (ONLY FROM THE PROVIDED LIST) BASED ON THE DETECTED MAIN IMAGE**:
+	**IMPORTANT!**: Ensure the style assigned is in the list of styles provided.
+    - Styles: Assign the applicable styles from the provided style list based on the detected main image. Do not make up styles or return any styles that are not in the list and must be exactly as spelled, no correction.
+
+**DIMENSION INFORMATION**:
+	- Extract the part of the product info that contains the dimension information as is.
+
+**DIMENSION VALUES**:
+    - Width: Extract the product width value in the product info.
+    - Height: Extract the product height value in the product info.
+    - Depth: Extract the product depth value in the product info.
+	**IMPORTANT!**: Ensure the correct values for width, height, and depth are extracted from the product info. Do not mix up width and depth values.
+
+**ASSIGN DIMENSION METRIC UNIT (ONLY FROM THE PROVIDED LIST)**
+	**IMPORTANT!**: Ensure the dimension unit assigned is in the list of dimension units provided.
+    - Dimension Unit: Assign the equivalent dimension unit from the product info from the provided dimension unit list. Do not make up dimension units or return any dimension units that are not in the list and must be exactly as spelled, no correction.
+
+**WEIGHT VALUE**:
     - Weight: The product weight value in the product info.
-    - Weight Unit: Assign the equivalent weight unit from the product info from the provided weight unit list.
-    *Weight unit list*:
-    ${productDataWeightUnits.join("\n")}.
 
-**DETECT AND ASSIGN STANDARDIZED CURRENCY CODE**:
-    - Currency Code: The equivalent currency ISO currency code, must be the equivalent of one of the provided currency codes.
-     *Currency code list*:
-    ${productCurrencyCodes.join("\n")}.
+**ASSIGN WEIGHT METRIC UNIT (ONLY FROM THE PROVIDED LIST)**
+	**IMPORTANT!**: Ensure the weight unit assigned is in the list of weight units provided.
+    - Weight Unit: Assign the equivalent weight unit from the product info from the provided weight unit list.  Do not make up weight units or return any weight units that are not in the list and must be exactly as spelled, no correction.
 
-**NAME, DESCRIPTION AND CATEGORY**:
+**ASSIGN CURRENCY CODE (ONLY FROM THE PROVIDED LIST)**:
+	**IMPORTANT!**: Ensure the currency code assigned is in the list of currency codes provided.
+    - Currency Code: The equivalent currency ISO currency code, must be the equivalent of one of the provided currency codes. Do not make up currency codes or return any currency codes that are not in the list and must be exactly as spelled, no correction.
+
+**NAME, DESCRIPTION**:
     - Product name: Generate a new descriptive name for the product based on the detected main image.
     - Product Description: Generate a new 2+ sentence description for the product based on the detected main image.
-    - Category: Assign the applicable category from the provided category list based on the detected main image and product info.
-    Category list:
-    ${productCategories.join("\n")}.
+
+**ASSIGN CATEGORY**:
+	**IMPORTANT!**: Ensure the category assigned is in the list of categories provided.
+    - Category: Assign the applicable category from the provided category list based on the detected main image and product info.  Do not make up categories or return any categories that are not in the list and must be exactly as spelled, no correction.
 
 **PRODUCT LOCATION**:
     - Generate the warehouse address location for the product based on the product info if available.
 	- The location in the product info can be a country code, zip code, state code, city, address, etc. Generate a fitting address location based on any limited info in the product info that can be used to get the latitude and longitude of the product location later.
+	- The generated address location should not be a code, for example instead of returning US, return United States, instead of CA, return Canada, if its a state code like CA, return California, United State. It must be an address not a code.
 `;
 
 export async function extractSanitizedProductData(args: {
@@ -100,7 +109,7 @@ export async function extractSanitizedProductData(args: {
 		mainImageImageIndex: z
 			.enum(imageUrls.map((_, index) => `${index}`))
 			.nullable()
-			.describe("The detected main image index (0-indexed)"),
+			.describe("The detected main image index (0-indexed) as string"),
 
 		// 2. Style (Colors, Materials, Style)
 		colorNames: z
@@ -112,26 +121,65 @@ export async function extractSanitizedProductData(args: {
 		materials: z
 			.array(z.string())
 			.describe("The applicable materials for the product based on the detected main image"),
-		styles: z
-			.array(z.enum(productStyles))
-			.describe("The applicable styles for the product based on the detected main image"),
+		styles: z.array(z.enum(productStyles)).describe(
+			`The applicable styles from this list for the product based on the detected main image
+
+				 ${productStyles.join("\n")}.
+				
+				Do not make up styles or return any styles that are not in the list and must be exactly as spelled, no correction`
+		),
 
 		// 3. Dimension
-		width: z.optional(z.number()).describe("The width of the product if available"),
-		height: z.optional(z.number()).describe("The height of the product if available"),
-		depth: z.optional(z.number()).describe("The depth of the product if available"),
-		dimensionUnit: z.enum(productDataDimensionUnits),
+		dimensionExtract: z
+			.string()
+			.nullable()
+			.describe(
+				"The part of the product info that contains the dimension information extracted if available"
+			),
+		width: z
+			.optional(z.number())
+			.nullable()
+			.describe("The extracted width of the product if available"),
+		height: z
+			.optional(z.number())
+			.nullable()
+			.describe("The extracted height of the product if available"),
+		depth: z
+			.optional(z.number())
+			.nullable()
+			.describe("The extracted depth of the product if available"),
+		dimensionUnit: z
+			.optional(z.enum(productDataDimensionUnits))
+			.nullable()
+			.describe(
+				`The equivalent dimension unit from this list:
+
+				 ${productDataDimensionUnits.join("\n")}.
+				
+				Do not make up dimension units or return any dimension units that are not in the list and must be exactly as spelled, no correction`
+			),
 
 		// 4. Weight
-		weight: z.optional(z.number()).describe("The weight of the product if available"),
-		weightUnit: z.enum(productDataWeightUnits),
+		weight: z.optional(z.number()).nullable().describe("The weight of the product if available"),
+		weightUnit: z
+			.optional(z.enum(productDataWeightUnits))
+			.nullable()
+			.describe(
+				`The equivalent weight unit from this list:
+
+				${productDataWeightUnits.join("\n")}.
+
+				 Do not make up weight units or return any weight units that are not in the list and must be exactly as spelled, no correction`
+			),
 
 		// 5. Currency Code
-		currencyCode: z
-			.enum(productCurrencyCodes)
-			.describe(
-				"The equivalent currency ISO currency code, must be the equivalent of one of the provided currency codes."
-			),
+		currencyCode: z.enum(productCurrencyCodes).describe(
+			`The equivalent currency ISO currency code from this list. 
+
+				${productCurrencyCodes.join("\n")}.
+				
+				Do not make up currency codes or return any currency codes that are not in the list and must be exactly as spelled, no correction.`
+		),
 
 		// 6. Name, Desc, Category
 		name: z
@@ -146,15 +194,21 @@ export async function extractSanitizedProductData(args: {
 			),
 		category: z
 			.optional(z.enum(productCategories))
+			.nullable()
 			.describe(
-				"The category that best matches the product from the provided category list if there is a match."
+				`The category that best matches the product from this list if there is a match. 
+
+				${productCategories.join("\n")}
+				
+				Do not make up categories or return any categories that are not in the list and must be exactly as spelled, no correction.`
 			),
 
 		// 7. Product Location
 		location: z
 			.optional(z.string())
+			.nullable()
 			.describe(
-				"A generated address location for the product based on the product info if available."
+				"A generated address location for the product based on the product info if available.  The generated address location should not be a code, for example instead of returning US, return United States, instead of CA, return Canada, if its a state code like CA, return California, United State. It must be an address not a code."
 			),
 	});
 
@@ -167,6 +221,8 @@ export async function extractSanitizedProductData(args: {
 		generateObject({
 			model: googleGemini2_5FlashLite,
 			system: SYSTEM_PROMPT,
+			schema: outputSchema,
+			temperature: 0,
 			messages: [
 				{
 					role: "user",
@@ -227,8 +283,6 @@ export async function extractSanitizedProductData(args: {
 					],
 				},
 			],
-			temperature: 0,
-			schema: outputSchema,
 		})
 	);
 

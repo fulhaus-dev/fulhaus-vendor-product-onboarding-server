@@ -22,7 +22,6 @@ export async function asyncTryCatch<T>(asyncFn: () => Promise<T>) {
 		const data = await asyncFn();
 		return { data };
 	} catch (unknownError) {
-		console.log("unknownError", unknownError);
 		const exceptionMessage = exceptionErrorMessage(unknownError);
 		return {
 			error: {

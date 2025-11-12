@@ -49,6 +49,7 @@ export async function vendorProductWebhookService(args: {
 			spreadsheetFileStream,
 			vendorProductDataR2FolderName,
 			fileName: spreadsheetFileKey,
+			ownerId,
 		});
 	}
 
@@ -62,6 +63,7 @@ export async function vendorProductWebhookService(args: {
 			zipFileStream,
 			vendorProductDataR2FolderName,
 			fileName: zipFileKey,
+			ownerId,
 		});
 	}
 }
