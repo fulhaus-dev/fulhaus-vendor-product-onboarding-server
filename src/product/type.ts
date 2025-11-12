@@ -53,3 +53,6 @@ export type ProductWeightInfo = {
 
 export type CreateProduct =
 	PublicApiType["v1"]["product"]["mutation"]["createPoProducts"]["_args"]["data"][0];
+
+export type UpdateProduct =
+	PublicApiType["v1"]["product"]["mutation"]["updatePoProductsById"]["_args"]["data"][0];

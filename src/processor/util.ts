@@ -1,5 +1,7 @@
 import type {
+	BaseProductData,
 	BaseProductDataMap,
+	ProductCurrencyCode,
 	ProductDimensionInfo,
 	ProductWeightInfo,
 } from "@webhook/product/type.js";
@@ -59,7 +61,7 @@ export function getBaseProductData(args: {
 	return baseProductData;
 }
 
-export function extractProductImageUrls(productLine: string): string[] {
+function extractProductImageUrls(productLine: string): string[] {
 	// Match any http(s):// sequence not interrupted by whitespace or comma
 	const urlPattern = /https?:\/\/[^\s,]+/g;
 	const matches = productLine.match(urlPattern) || [];
@@ -91,6 +93,49 @@ export function extractProductImageUrls(productLine: string): string[] {
 		.map((url) => url.split("#")[0]); // optional: drop #hash
 
 	return [...new Set(imageUrls)];
+}
+
+export function getProductCurrencyFields(args: {
+	msrp?: number;
+	map?: number;
+	tradePrice: number;
+	currencyCode: ProductCurrencyCode;
+	stockQty: number;
+	restockDate?: number;
+}) {
+	const { msrp, map, tradePrice, currencyCode, stockQty, restockDate } = args;
+
+	const retailPrice = msrp ?? map ?? tradePrice * 2;
+
+	const price = {
+		currencyCode,
+		retailPrice,
+		msrp,
+		map,
+		tradePrice,
+	};
+
+	const hasCAD = price.currencyCode === "CAD";
+	const hasUSD = price.currencyCode === "USD";
+	const retailPriceCAD = price.currencyCode === "CAD" ? price.retailPrice : undefined;
+	const retailPriceUSD = price.currencyCode === "USD" ? price.retailPrice : undefined;
+
+	const stockQtyUSD = price.currencyCode === "USD" ? stockQty : 0;
+	const stockQtyCAD = price.currencyCode === "CAD" ? stockQty : 0;
+	const restockDateUSD = price.currencyCode === "USD" ? restockDate : undefined;
+	const restockDateCAD = price.currencyCode === "CAD" ? restockDate : undefined;
+
+	return {
+		price,
+		hasCAD,
+		hasUSD,
+		retailPriceCAD,
+		retailPriceUSD,
+		stockQtyUSD,
+		stockQtyCAD,
+		restockDateUSD,
+		restockDateCAD,
+	};
 }
 
 export function getStandardizedProductDimension(dimensionInfo?: ProductDimensionInfo) {
